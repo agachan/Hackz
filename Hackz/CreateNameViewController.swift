@@ -7,6 +7,7 @@
 //
 
 import UIKit
+
 class RegistButton:UIButton{
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -58,5 +59,7 @@ class CreateNameViewController: UIViewController {
         present(ac, animated: true, completion: nil)
 
     }
+    
+    
    
 }

@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import GRPC
+
 class StartButton:UIButton{
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -22,16 +24,67 @@ class StartButton:UIButton{
         self.layer.borderWidth = 2.0
         self.layer.borderColor = UIColor.lightGray.cgColor
     }
+    
+    
+    
+}
+
+class CollectionViewCell: UICollectionViewCell {
+    @IBOutlet weak var label: UILabel!
 }
 
 class StartGameViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource,UICollectionViewDelegateFlowLayout{
     
-    @IBOutlet weak var memberCollection: UICollectionView!
-    
+    @IBOutlet weak var collection: UICollectionView!
+    var numbers: [Int] = []
     override func viewDidLoad() {
-        memberCollection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
-        memberCollection.delegate = self
-        memberCollection.dataSource = self
+        collection.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
+        collection.delegate = self
+        collection.dataSource = self
+        for n in 0..<100 {
+                    numbers.append(n)
+                }
+
+        addLongPressGestureListner()
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        reorderCells(sourceIndex: sourceIndexPath.item, destinationIndex: destinationIndexPath.item)
+    }
+    private func reorderCells(sourceIndex: Int, destinationIndex: Int) {
+        let n = numbers.remove(at: sourceIndex)
+        numbers.insert(n, at: destinationIndex)
+    }
+
+    
+    /// セルの長押しのリスナーの登録
+    func addLongPressGestureListner() {
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongGesture(gesture:)))
+        collection.addGestureRecognizer(longPressGesture)
+    }
+    
+    // MARK: - PRIVATE METHODS
+    
+    /// セルの長押しジェスチャーのアクション
+    ///
+    /// - Parameters: gesture
+    @objc
+    private func handleLongGesture(gesture: UILongPressGestureRecognizer) {
+        switch gesture.state {
+        case .began:
+            guard let selectedIndexPath = collection.indexPathForItem(at: gesture.location(in: collection)) else {break}
+            collection.beginInteractiveMovementForItem(at: selectedIndexPath)
+        case .changed:
+            collection.updateInteractiveMovementTargetPosition(gesture.location(in: gesture.view))
+        case .ended:
+            collection.endInteractiveMovement()
+        default:
+            collection.cancelInteractiveMovement()
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -40,20 +93,20 @@ class StartGameViewController: UIViewController, UICollectionViewDelegate, UICol
         let height = width
         return CGSize(width: width, height: height)
     }
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 2
-    }
-    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 5
+        return numbers.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath)
-        cell.backgroundColor = UIColor.lightGray
-        
-        return cell
+        let kReorderCardsCollectionViewCell = "CollectionViewCell"
+                let c = collectionView.dequeueReusableCell(withReuseIdentifier: kReorderCardsCollectionViewCell, for: indexPath)
+                guard let cell = c as? CollectionViewCell else {
+                    return c
+                }
+                cell.label.text = "\(numbers[indexPath.item])"
+
+                return cell
     }
     
 }

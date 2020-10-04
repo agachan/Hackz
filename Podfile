@@ -6,8 +6,6 @@ target 'Hackz' do
   use_frameworks!
 
   # Pods for Hackz
-  pod 'gRPC-Swift', '~> 1.0.0-alpha.18'
-  pod 'IQKeyboardManager'
 
 
 
